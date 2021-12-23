@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/textproto"
 	"os"
+	"os/exec"
 	"path"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ import (
 )
 
 var port = flag.Int("p", 9598, "端口")
+var py = flag.String("py", "C:\\Python27\\python.exe", "Python路径")
 
 const (
 	Log = iota
@@ -136,7 +138,7 @@ func handleBuild(conn *textproto.Conn, items []string) {
 		buildingAt = time.Now()
 		buildingFor = user
 		src := path.Join("config", dir)
-		dest := "project/20191223-base/assets/localBundle/config"
+		dest := "project/20191223-base/config"
 		errch := make(chan error)
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -209,6 +211,18 @@ func getUser(conn *textproto.Conn) (key string, ok bool) {
 }
 
 func build(conn *textproto.Conn, user string) {
+	cmd := exec.Command(*py, "zipConfigJson.py")
+	cmd.Dir = "project/20191223-base/"
+	err := cmd.Run()
+	if err != nil {
+		log.Println(err)
+	}
+	if err != nil {
+		log.Println(err)
+		conn.Cmd("4;%s", err.Error())
+		return
+	}
+
 	name := "D:\\CocosDashboard_1.0.20\\resources\\.editors\\Creator\\2.4.3\\CocosCreator.exe"
 	argv := []string{
 		"--path",
